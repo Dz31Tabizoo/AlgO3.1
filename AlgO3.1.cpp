@@ -240,6 +240,9 @@ struct User_Info {
     string userName;
     string password;
     short  permissions = 0;
+
+    bool _MarkDelete = false;
+    bool _Updated = false;
 };
 User_Info c_user;
 struct Client_Info {
@@ -256,9 +259,7 @@ enum Permissions {
     None = 0, Show_Client_List = 1 , Add_New_Client = 2 , Delete_Client = 4, Update_Client_Info = 8, Find_Client = 16, Transaction = 32, Manage_Users = 64
 };
 
-
 User_Info ReadUserLoginInfo();
-
 
 vector<string> SplitStringToWords(string Data_Text, string Delimiter = "##")
 {
@@ -598,7 +599,6 @@ bool MarkClientToDeleteIt(string AccountNumber, vector <Client_Info>& vClients)
             C.MarkDelete = true;
             return true;
         }
-
     }
     return false;
 }
@@ -635,13 +635,10 @@ bool DeleteClientByNumberAccount(string AccountNumber, vector<Client_Info>& vCli
         {
             MarkClientToDeleteIt(AccountNumber, vClients);
             SaveClientsDataToFile(ClientsFileName, vClients);
-
             vClients = LoadClientDataFromFile(ClientsFileName); // to refresh vector clients
-
             cout << "\n Client Deleted Successfully.";
             return true;
         }
-
     }
     else
     {
@@ -867,6 +864,8 @@ vector <User_Info> LoadUsersFromFile(string FileNM)
     return vUsers;
 }
 
+bool DeleteUser(string username, vector<User_Info>& vUSers); // deff
+
 void ShowAllUsersScreen()
 {
     vector <User_Info> vecuser = LoadUsersFromFile(UsersFileName);
@@ -983,6 +982,7 @@ void ShowExitScreen()
     cout << "________________________________________\n";
     cout << "          Program Ends ^_^\n";
     cout << "----------------------------------------\n";
+    exit(0);
 }
 
 void AddingNewUSer()
@@ -1017,6 +1017,105 @@ void GobacktoUserManagMenue()
 
 }
 
+string ReadUserName()
+{
+    string username;
+    cout << "\nEnter a User Name to Searsh" << endl;
+    getline(cin >> ws, username);
+    return username;
+}
+
+void ShowDeleteUserScreen()
+{
+    cout << "________________________________________\n";
+    cout << "          Delete  USER Screen\n";
+    cout << "----------------------------------------\n";
+    vector<User_Info>vUSers = LoadUsersFromFile(UsersFileName);
+    string User_toSearch= ReadUserName();
+    DeleteUser(User_toSearch, vUSers);
+}
+
+bool MarkUserToDelete(string username, vector<User_Info>& vUsers )
+{
+    for (User_Info& U: vUsers)
+    {
+        if (U.userName == username)
+        {
+            U._MarkDelete = true;
+            return true;
+        }
+
+    }
+    return false;
+}
+
+void PrintUSerRecord(User_Info TheUser)
+{
+    cout << "\nUser Info:\nUser Name : " << TheUser.userName << "\tPassWord : " << TheUser.password << "\tPermissions : " << TheUser.permissions;
+}
+
+bool FindUser(string username, vector<User_Info> vUSers,User_Info& TheUser)
+{
+
+    for (User_Info Us : vUSers)
+    {
+        if (Us.userName == username)
+        {
+            TheUser = Us;
+            return true;
+        }
+    }
+    return false;
+}
+
+vector<User_Info> SaveUsersDataToFile(string FileName, vector<User_Info>& vUSers)
+{
+    fstream File; string usData;
+    File.open(FileName, ios::out);
+    if (File.is_open())
+    {
+        for (User_Info U: vUSers )
+        {
+            if (!U._MarkDelete)
+            {
+                usData = TransformUserDataToLine(U);
+                File << usData << endl;
+            }
+
+        }
+        File.close();
+    }
+    return vUSers;
+}
+
+bool DeleteUser(string username, vector<User_Info>& vUSers)
+{
+    User_Info TheUser;
+    char Answr = 'm';
+
+    if (FindUser(username,vUSers,TheUser))
+    {
+        PrintUSerRecord(TheUser);
+        
+        cout << "\nAre you sue You want to delete User with Name " << TheUser.userName << " ? Y : Yes / N : No\n";
+        cin >> Answr;
+        if (toupper(Answr) == 'Y')
+        {
+            MarkUserToDelete(username, vUSers);
+            SaveUsersDataToFile(UsersFileName, vUSers);
+            vUSers = LoadUsersFromFile(UsersFileName);
+            cout << "\n Client Deleted Successfully.";
+            return true;
+        } 
+
+    }
+    else
+    {
+        cout << "USer With USer Name [" << username << "] is Not Found!";
+    }
+    return false;
+}
+
 void PErformUserManagMenue(enUsers UsersMenue)
 {
     switch (UsersMenue)
@@ -1028,11 +1127,14 @@ void PErformUserManagMenue(enUsers UsersMenue)
         break;
 
     case enAddUSers:
+        system("cls");
         ShowAddUserScreen();
         GobacktoUserManagMenue();
         break;
 
     case enDeleteUSers:
+        system("cls");
+        ShowDeleteUserScreen();
         GobacktoUserManagMenue();
         break;
     case enUpdateUSer:
@@ -1217,8 +1319,6 @@ void ShowTransactionMenuScreen()
 
     PerformTransactionsMenue((enTransactions)ReadTransactionMenue());
 }
-
-
  
 void ShowMainMenu()
 {
