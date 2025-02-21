@@ -545,6 +545,7 @@ bool FindClientToDelete(string AccountNumber, vector<Client_Info> vClients, Clie
         if (AccountNumber == C.acountNumb)
         {
             TheClient = C;
+           
             return true;
         }
     }
@@ -1008,6 +1009,18 @@ void ShowAddUserScreen()
 
 void ShowUserManagmentMenu();
 
+User_Info ChangeUserInfo(string username)
+{
+    User_Info ChngUser;
+    ChngUser.userName = username;
+    cout << "\nEnter New Pass Word :\n";
+    getline(cin >> ws, ChngUser.password);
+    cout << "Enter New Permissions :";
+    ChngUser.permissions = GetPermissions();
+
+        return ChngUser;
+}
+
 void GobacktoUserManagMenue()
 {
     cout << "\n Press any Key to Go Back To User Manag Menue...";
@@ -1020,7 +1033,7 @@ void GobacktoUserManagMenue()
 string ReadUserName()
 {
     string username;
-    cout << "\nEnter a User Name to Searsh" << endl;
+    cout << "Enter a User Name to Searsh" << endl;
     getline(cin >> ws, username);
     return username;
 }
@@ -1116,6 +1129,72 @@ bool DeleteUser(string username, vector<User_Info>& vUSers)
     return false;
 }
 
+bool UpdateUser(string username, vector<User_Info>& vUSers)
+{
+    User_Info Updtuser;
+    char answer = 'n';
+
+    if (FindUser(username, vUSers, Updtuser))
+    {
+        PrintUserLineRecord(Updtuser);
+        cout << "Excute Udating user ?: Y:yes / N:No .\n";
+        cin >> answer;
+
+        if (toupper(answer) == 'Y')
+        {
+            cout << "---- Updating User Info ----:\n";
+            for (User_Info& CH : vUSers)
+            {
+                if (CH.userName == username)
+                {
+                    CH = ChangeUserInfo(username);
+                    break;
+                }
+
+            }
+
+        }
+        SaveUsersDataToFile(UsersFileName, vUSers);
+        return true;
+    }
+    else
+    {
+        cout << " \n\t  -_- USer Not Founded -_- ";
+    }
+    return false;
+}
+
+void ShowUpdateUserScreen()
+{
+    cout << "________________________________________\n";
+    cout << "          Update USER Screen\n";
+    cout << "----------------------------------------\n";
+
+    string username = ReadUserName();
+    vector <User_Info> vUSers = LoadUsersFromFile(UsersFileName);
+    UpdateUser(username, vUSers);
+}
+
+void ShowFindUSerScrenn()
+{
+    cout << "________________________________________\n";
+    cout << "          Find USER Screen\n";
+    cout << "----------------------------------------\n\n";
+
+    string username = ReadUserName();
+    vector <User_Info> vUSers = LoadUsersFromFile(UsersFileName);
+    User_Info UsrToFind;
+    if (FindUser(username,vUSers,UsrToFind))
+    {
+        PrintUSerRecord(UsrToFind);
+    }
+    else
+    {
+        cout << "\t-_-  User Not Fonded  -_-" << endl;
+    }
+
+}
+
 void PErformUserManagMenue(enUsers UsersMenue)
 {
     switch (UsersMenue)
@@ -1138,9 +1217,12 @@ void PErformUserManagMenue(enUsers UsersMenue)
         GobacktoUserManagMenue();
         break;
     case enUpdateUSer:
+        system("cls");
+        ShowUpdateUserScreen();
         GobacktoUserManagMenue();
         break;
     case enFindUser:
+        ShowFindUSerScrenn();
         GobacktoUserManagMenue();
         break;
     case enMainMenueu:
@@ -1331,6 +1413,7 @@ void ShowMainMenu()
     
     PerformMainMenueOption((enMainManueOptions)ReadMainMenuOption());
 }
+
 
 void Login();
 
